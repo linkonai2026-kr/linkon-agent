@@ -1,6 +1,7 @@
 import "./doctor-health.test-support.js";
 import fs from "node:fs";
 import path from "node:path";
+import * as fsSafeAdvanced from "@openclaw/fs-safe/advanced";
 import { afterEach, expect, it, vi } from "vitest";
 import { doctorCommand } from "../commands/doctor.js";
 import { loadPluginRegistryHandle } from "../plugins/loader.js";
@@ -8,6 +9,10 @@ import { disposePluginRegistryInstances } from "../plugins/runtime.js";
 import { withOpenClawTestState } from "../test-utils/openclaw-test-state.js";
 
 const { mocks } = await import("./doctor-health.test-support.js");
+
+vi.mock("@openclaw/fs-safe/advanced", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@openclaw/fs-safe/advanced")>()),
+}));
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -58,24 +63,14 @@ it.each([
       mocks.config.mockReturnValue(cfg);
       let failedWrite = false;
       if (failure === "ENOSPC") {
-        const failCaptureWrite = (target: fs.PathLike) => {
-          if (path.basename(String(target)) === "index.cjs" && String(target) !== source) {
+        const capturedSource = fs.realpathSync(source);
+        const copy = fsSafeAdvanced.copyRootFileSync;
+        vi.spyOn(fsSafeAdvanced, "copyRootFileSync").mockImplementation((options) => {
+          if (options.source.absolutePath === capturedSource) {
             failedWrite = true;
             throw Object.assign(new Error("fixture capture write failed"), { code: "ENOSPC" });
           }
-        };
-        const copy = fs.copyFileSync;
-        vi.spyOn(fs, "copyFileSync").mockImplementation((from, target, ...args) => {
-          failCaptureWrite(target);
-          return copy(from, target, ...args);
-        });
-        // Platforms without descriptor paths create the bounded-copy destination directly.
-        const open = fs.openSync;
-        vi.spyOn(fs, "openSync").mockImplementation((target, flags, ...args) => {
-          if (flags === "w") {
-            failCaptureWrite(target);
-          }
-          return open(target, flags, ...args);
+          return copy(options);
         });
       }
       mocks.runContributions.mockImplementation(async () => {
