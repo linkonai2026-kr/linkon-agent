@@ -1,0 +1,22 @@
+{
+  "name": "@linkon/agent-core",
+  "version": "0.0.1",
+  "description": "Linkon Agent 코어 플러그인 (승인 증표, 단일 관문, 서비스 도구)",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "typebox": "1.3.34"
+  },
+  "devDependencies": {
+    "@openclaw/plugin-sdk": "workspace:*",
+    "openclaw": "workspace:*"
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ],
+    "compat": {
+      "pluginApi": ">=2026.9.8"
+    }
+  }
+}

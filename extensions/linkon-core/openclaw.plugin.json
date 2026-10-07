@@ -1,0 +1,16 @@
+{
+  "id": "linkon-core",
+  "name": "Linkon Core",
+  "description": "Linkon Agent 코어. 승인 없이는 외부로 나가는 행동을 하지 못하게 하는 단일 관문과 서비스 도구.",
+  "categories": ["other"],
+  "contracts": {
+    "tools": ["linkon_list_folder", "linkon_send_order"]
+  },
+  "activation": {
+    "onStartup": true
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false
+  }
+}
